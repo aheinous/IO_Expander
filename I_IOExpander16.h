@@ -29,19 +29,27 @@
 
 class I_IOExpander16{
 public:
-	// arduino-like single bit methods
+	// --- arduino-like single bit methods ---
+	// pin: one of IOEX16_A0 - IOEX16B7
+	// mode: either INPUT or OUTPUT
+	// value: either HIGH or LOW
+	// digitalRead returns either HIGH or LOW
 	virtual void pinMode(uint8_t pin, uint8_t mode) = 0;
 	virtual void digitalWrite(uint8_t pin, uint8_t value) = 0;
 	virtual uint8_t digitalRead(uint8_t pin) = 0;
 	virtual void pullUp(uint8_t pin, uint8_t value) = 0;
 
-	// 8-bit versions
+	// --- 8-bit versions ---
+	// like the above except port is either IOEX16_PORTA or IOEX16_PORTB,
+	// mode, values and digitalRead_8 's  return values are now
+	// bit vectors. For pinMode_8 1 means INPUT, 0 means OUTPUT.
 	virtual void pinMode_8(uint8_t port, uint8_t mode) = 0;
 	virtual void digitalWrite_8(uint8_t port, uint8_t value) = 0;
 	virtual uint8_t digitalRead_8(uint8_t port) = 0;
 	virtual void pullUp_8(uint8_t port, uint8_t value) = 0;
 
 	// 16-bit versions
+	// like above but both ports at once.
 	virtual void pinMode_16(uint16_t mode) = 0;
 	virtual void digitalWrite_16(uint16_t value) = 0;
 	virtual uint16_t digitalRead_16() = 0;
