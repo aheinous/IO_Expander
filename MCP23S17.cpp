@@ -1,16 +1,4 @@
-/*************************************************** 
-  This is a library for the MCP23S17 i2c port expander
 
-  These displays use I2C to communicate, 2 pins are required to  
-  interface
-  Adafruit invests time and resources providing this open source code, 
-  please support Adafruit and open-source hardware by purchasing 
-  products from Adafruit!
-
-  Written by Limor Fried/Ladyada for Adafruit Industries.  
-  BSD license, all text above must be included in any redistribution
- ****************************************************/
-/* Adapted by Alex Haynes from Adafruit MCP23S17 lib */
 
 #include "MCP23S17.h"
 #include <Arduino.h>
@@ -54,11 +42,11 @@ void MCP23S17::begin(){
 	SPI.setBitOrder(MSBFIRST);           
 	SPI.setDataMode(SPI_MODE0);
 	// enable HW addressing
-	this->write_8(MCP23x17_IOCONA, ADDR_ENABLE); 
+	this->regWrite_8(MCP23x17_IOCONA, ADDR_ENABLE); 
 	MCP23x17::begin();
 }
 
-void MCP23S17::write_16(uint8_t regAddr, uint16_t word){
+void MCP23S17::regWrite_16(uint8_t regAddr, uint16_t word){
 
 	arduino_digitalWrite(csPin, LOW);                            
 	SPI.transfer(opcodeWrite);             
@@ -68,7 +56,7 @@ void MCP23S17::write_16(uint8_t regAddr, uint16_t word){
 	arduino_digitalWrite(csPin, HIGH);
 }
 
-uint16_t MCP23S17::read_16(uint8_t regAddr){
+uint16_t MCP23S17::regRead_16(uint8_t regAddr){
 	uint16_t value = 0;                   
 	arduino_digitalWrite(csPin, LOW);                     
 	SPI.transfer(opcodeRead);  
@@ -80,7 +68,7 @@ uint16_t MCP23S17::read_16(uint8_t regAddr){
 	return value;   
 }
 
-uint8_t MCP23S17::read_8(uint8_t regAddr){
+uint8_t MCP23S17::regRead_8(uint8_t regAddr){
 	uint8_t value = 0;                        
 	arduino_digitalWrite(csPin, LOW);              
 	SPI.transfer(opcodeRead);  
@@ -91,7 +79,7 @@ uint8_t MCP23S17::read_8(uint8_t regAddr){
 	return value;  
 }
 
-void MCP23S17::write_8(uint8_t regAddr, uint8_t value){
+void MCP23S17::regWrite_8(uint8_t regAddr, uint8_t value){
 	arduino_digitalWrite(csPin, LOW);                  
 	SPI.transfer(opcodeWrite);     
 	SPI.transfer(regAddr);                           

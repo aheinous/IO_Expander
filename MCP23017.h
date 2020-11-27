@@ -28,11 +28,11 @@ class MCP23017 : public MCP23x17{
 private:
 	const uint8_t i2c_address;
 
-protected:
-	virtual uint8_t read_8(uint8_t regAddr);
-	virtual void write_8(uint8_t regAddr, uint8_t value);
-	virtual uint16_t read_16(uint8_t regAddr);
-	virtual void write_16(uint8_t regAddr, uint16_t value);
+public:
+	virtual uint8_t regRead_8(uint8_t regAddr);
+	virtual void regWrite_8(uint8_t regAddr, uint8_t value);
+	virtual uint16_t regRead_16(uint8_t regAddr);
+	virtual void regWrite_16(uint8_t regAddr, uint16_t value);
 
 public:
 	MCP23017(uint8_t address);
