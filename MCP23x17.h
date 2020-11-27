@@ -3,46 +3,6 @@
 #include <Arduino.h>
 
 
-class MCP23x17{
-private:
-	uint16_t curMode;
-	uint16_t curWrite;
-	uint16_t curPullUp;
-
-public:
-
-	// raw read and write methods that actualy differ
-	// between the MCP23017 (I2C) and the MCP23S17 (SPI)
-	virtual uint8_t regRead_8(uint8_t regAddr) = 0;
-	virtual void regWrite_8(uint8_t regAddr, uint8_t value) = 0;
-	virtual uint16_t regRead_16(uint8_t regAddr) = 0;
-	virtual void regWrite_16(uint8_t regAddr, uint16_t value) = 0;
-
-	void begin();
-
-	// All the methods below have implentations
-	// common to both the MCP23S17 and the MCP23017.
-
-	// single-bit Arduino-like versions
-	void pinMode(uint8_t pin, uint8_t mode);
-	void digitalWrite(uint8_t pin, uint8_t value);
-	uint8_t digitalRead(uint8_t pin);
-	void pullUp(uint8_t pin, uint8_t value);
-
-	// 8-bit versions
-	void pinMode_8(uint8_t port, uint8_t mode);
-	void digitalWrite_8(uint8_t port, uint8_t value);
-	uint8_t digitalRead_8(uint8_t port);
-	void pullUp_8(uint8_t port, uint8_t value);
-
-	// 16-bit versions
-	void pinMode_16(uint16_t mode);
-	void digitalWrite_16(uint16_t value);
-	uint16_t digitalRead_16();
-	void pullUp_16(uint16_t value);
-
-};
-
 #define MCP23x17_PORTA 0
 #define MCP23x17_PORTB 1
 
@@ -93,4 +53,151 @@ public:
 #define MCP23x17_OLATB 0x15
 
 #define MCP23x17_INT_ERR 255
+
+
+
+template<typename T>
+class _MCP23x17 : public T{
+private:
+	uint16_t curMode;
+	uint16_t curWrite;
+	uint16_t curPullUp;
+
+public:
+
+	_MCP23x17(){}
+
+	void begin(){
+		T::begin();
+		// set all inputs
+		curMode = 0xFFFF;
+		curWrite = 0x0000;
+		curPullUp = 0x0000;
+		this->regWrite_16(MCP23x17_IODIRA, 0xFFFF);
+	}
+
+	/////////////// arduino-like signal bit methods ///////////////
+
+	void pinMode(uint8_t pin, uint8_t mode) {
+		// update cached value
+		if(mode==INPUT){
+			// set bit
+			curMode |= (1<<pin);
+		}else{
+			// clear bit
+			curMode &= ~(1<<pin);
+		}
+		// send change to chip
+		if(pin < 8){
+			this->regWrite_8(MCP23x17_IODIRA, curMode & 0xFF);
+		}else{
+			this->regWrite_8(MCP23x17_IODIRB, curMode>>8);	
+		}
+	}
+
+	void digitalWrite(uint8_t pin, uint8_t value) {
+		// update cached value
+		if(value==HIGH){
+			// set bit
+			curWrite |= (1<<pin);
+		}else{
+			// clear bit
+			curWrite &= ~(1<<pin);
+		}
+		// send change to chip
+		if(pin < 8){
+			this->regWrite_8(MCP23x17_GPIOA, curWrite & 0xFF);
+		}else{
+			this->regWrite_8(MCP23x17_GPIOB, curWrite>>8);	
+		}
+	}
+	void pullUp(uint8_t pin, uint8_t value) {
+		// update cached value
+		if(value){
+			// set bit
+			curPullUp |= (1<<pin);
+		}else{
+			// clear bit
+			curPullUp &= ~(1<<pin);
+		}
+		// send change to chip
+		if(pin < 8){
+			this->regWrite_8(MCP23x17_GPPUA, curPullUp & 0xFF);
+		}else{
+			this->regWrite_8(MCP23x17_GPPUB, curPullUp>>8);	
+		}
+	}
+
+	uint8_t digitalRead(uint8_t pin) {
+		uint8_t port = MCP23x17_PORTA;
+		if(pin >= 8){
+			pin -= 8;
+			port = MCP23x17_PORTB;
+		}
+		uint8_t vec = this->digitalRead_8(port);
+		return (vec & (1<<pin) ) ? HIGH : LOW;
+	}
+
+
+	//////////////// 8-bit versions /////////////////
+
+	void pinMode_8(uint8_t port, uint8_t mode) {
+		if(port==MCP23x17_PORTA){
+			this->regWrite_8( MCP23x17_IODIRA, mode);
+			this->curMode = (this->curMode & 0xFF00) | mode;
+		}else{
+			this->regWrite_8( MCP23x17_IODIRB, mode);
+			this->curMode = (this->curMode & 0x00FF) | (mode<<8);
+		} 	
+	}
+
+	void digitalWrite_8(uint8_t port, uint8_t value) {
+		if(port==MCP23x17_PORTA){
+			this->regWrite_8( MCP23x17_GPIOA, value);
+			this->curWrite = (this->curWrite & 0xFF00) | value;
+		}else{
+			this->regWrite_8( MCP23x17_GPIOB, value);
+			this->curWrite = (this->curWrite & 0x00FF) | (value<<8);
+		}
+	}
+
+	void pullUp_8(uint8_t port, uint8_t value) {
+		if(port==MCP23x17_PORTA){
+			this->regWrite_8( MCP23x17_GPPUA, value);
+			this->curPullUp = (this->curPullUp & 0xFF00) | value;
+		}else{
+			this->regWrite_8( MCP23x17_GPPUB, value);
+			this->curPullUp = (this->curPullUp & 0x00FF) | (value<<8);
+		}
+	}
+
+	uint8_t digitalRead_8(uint8_t port) {
+		if(port==MCP23x17_PORTA){
+			return this->regRead_8(MCP23x17_GPIOA);
+		}
+		return this->regRead_8(MCP23x17_GPIOB);
+	}
+
+
+	/////////////////// 16-bit versions ///////////////////
+
+	void pinMode_16(uint16_t mode) {
+		this->regWrite_16(MCP23x17_IODIRA, mode);
+		this->curMode = mode;
+	}
+
+	void digitalWrite_16(uint16_t value) {
+		this->regWrite_16(MCP23x17_GPIOA, value);
+		this->curWrite = value;
+	}
+	void pullUp_16(uint16_t value) {
+		this->regWrite_16(MCP23x17_GPPUA, value);
+		this->curPullUp = value;
+	}
+
+	uint16_t digitalRead_16() {
+		return this->regRead_16(MCP23x17_GPIOA);
+	}
+
+};
 
