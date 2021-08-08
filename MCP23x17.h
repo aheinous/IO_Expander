@@ -91,7 +91,7 @@ public:
 		if(pin < 8){
 			this->regWrite_8(MCP23x17_IODIRA, curMode & 0xFF);
 		}else{
-			this->regWrite_8(MCP23x17_IODIRB, curMode>>8);	
+			this->regWrite_8(MCP23x17_IODIRB, curMode>>8);
 		}
 	}
 
@@ -108,7 +108,7 @@ public:
 		if(pin < 8){
 			this->regWrite_8(MCP23x17_GPIOA, curWrite & 0xFF);
 		}else{
-			this->regWrite_8(MCP23x17_GPIOB, curWrite>>8);	
+			this->regWrite_8(MCP23x17_GPIOB, curWrite>>8);
 		}
 	}
 	void pullUp(uint8_t pin, uint8_t value) {
@@ -124,7 +124,7 @@ public:
 		if(pin < 8){
 			this->regWrite_8(MCP23x17_GPPUA, curPullUp & 0xFF);
 		}else{
-			this->regWrite_8(MCP23x17_GPPUB, curPullUp>>8);	
+			this->regWrite_8(MCP23x17_GPPUB, curPullUp>>8);
 		}
 	}
 
@@ -148,16 +148,16 @@ public:
 		}else{
 			this->regWrite_8( MCP23x17_IODIRB, mode);
 			this->curMode = (this->curMode & 0x00FF) | (mode<<8);
-		} 	
+		}
 	}
 
-	void digitalWrite_8(uint8_t port, uint8_t value) {
+	void digitalWrite_8(uint8_t port, uint8_t value, uint8_t mask=0xFF) {
 		if(port==MCP23x17_PORTA){
-			this->regWrite_8( MCP23x17_GPIOA, value);
-			this->curWrite = (this->curWrite & 0xFF00) | value;
+			this->curWrite = (this->curWrite &  ~((uint16_t) mask)) | (value & mask);
+			this->regWrite_8( MCP23x17_GPIOA, this->curWrite & 0xFF);
 		}else{
-			this->regWrite_8( MCP23x17_GPIOB, value);
-			this->curWrite = (this->curWrite & 0x00FF) | (value<<8);
+			this->curWrite = (this->curWrite & ~(( (uint16_t) mask )<<8)) | ((value & mask) << 8);
+			this->regWrite_8( MCP23x17_GPIOB, this->curWrite >> 8);
 		}
 	}
 
